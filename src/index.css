@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+:root {
+  --font-display: "DM Serif Display", Georgia, serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid #92400e;
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .icon-button {
+    display: inline-flex;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    color: #57534e;
+    transition: color 150ms, background-color 150ms;
+  }
+
+  .icon-button:hover {
+    background-color: #f5f5f4;
+    color: #1c1917;
+  }
+
+  .quantity-button {
+    display: grid;
+    width: 1.5rem;
+    height: 1.5rem;
+    place-items: center;
+    border: 1px solid #e7e5e4;
+    border-radius: 9999px;
+    color: #44403c;
+    font-size: 0.875rem;
+    line-height: 1;
+    transition: color 150ms, border-color 150ms;
+  }
+
+  .quantity-button:hover:not(:disabled) {
+    border-color: #a16207;
+    color: #92400e;
+  }
+
+  .quantity-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+}

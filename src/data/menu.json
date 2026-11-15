@@ -1,0 +1,152 @@
+[
+  {
+    "id": "kopi-senja",
+    "name": "Kopi Gula Aren",
+    "category": "Kopi",
+    "price": 28000,
+    "stock": 18,
+    "image": "kopi-gula-aren.jpeg",
+    "description": "Espresso pekat berpadu susu segar dan manis alami gula aren.",
+    "rating": 4.9
+  },
+  {
+    "id": "cappuccino",
+    "name": "Cappuccino",
+    "category": "Kopi",
+    "price": 30000,
+    "stock": 14,
+    "image": "cappuccino.jpeg",
+    "description": "Keseimbangan espresso, susu hangat, dan foam lembut yang klasik.",
+    "rating": 4.8
+  },
+  {
+    "id": "cafe-latte",
+    "name": "Cafe Latte",
+    "category": "Kopi",
+    "price": 32000,
+    "stock": 12,
+    "image": "cafe-latte.jpeg",
+    "description": "Espresso pilihan dengan steamed milk lembut untuk teman harimu.",
+    "rating": 4.8
+  },
+  {
+    "id": "americano",
+    "name": "Americano",
+    "category": "Kopi",
+    "price": 24000,
+    "stock": 20,
+    "image": "americano.jpeg",
+    "description": "Double espresso dan air untuk rasa kopi yang bersih dan berani.",
+    "rating": 4.7
+  },
+  {
+    "id": "mocha",
+    "name": "Mocha Cream",
+    "category": "Kopi",
+    "price": 34000,
+    "stock": 9,
+    "image": "mocha-cream.jpeg",
+    "description": "Espresso, cokelat premium, dan susu dengan lapisan krim lembut.",
+    "rating": 4.9
+  },
+  {
+    "id": "espresso",
+    "name": "Espresso",
+    "category": "Kopi",
+    "price": 22000,
+    "stock": 15,
+    "image": "espresso.jpeg",
+    "description": "Shot espresso single-origin dengan aroma kuat dan aftertaste manis.",
+    "rating": 4.7
+  },
+  {
+    "id": "matcha",
+    "name": "Matcha Latte",
+    "category": "Non-Kopi",
+    "price": 33000,
+    "stock": 11,
+    "image": "matcha-latte.jpeg",
+    "description": "Matcha Jepang premium dikocok lembut bersama susu pilihan.",
+    "rating": 4.9
+  },
+  {
+    "id": "cokelat",
+    "name": "Cokelat Hangat",
+    "category": "Non-Kopi",
+    "price": 29000,
+    "stock": 13,
+    "image": "cokelat-hangat.jpeg",
+    "description": "Cokelat asli yang kaya rasa, disajikan hangat dan menenangkan.",
+    "rating": 4.8
+  },
+  {
+    "id": "lemon-tea",
+    "name": "Lemon Tea",
+    "category": "Non-Kopi",
+    "price": 24000,
+    "stock": 17,
+    "image": "lemon-tea.jpeg",
+    "description": "Teh pilihan dan lemon segar, menyegarkan di setiap tegukan.",
+    "rating": 4.6
+  },
+  {
+    "id": "croissant",
+    "name": "Butter Croissant",
+    "category": "Makanan",
+    "price": 26000,
+    "stock": 8,
+    "image": "butter-croissant.jpeg",
+    "description": "Pastry berlapis dengan mentega premium, renyah di luar dan lembut di dalam.",
+    "rating": 4.8
+  },
+  {
+    "id": "toast",
+    "name": "Avocado Toast",
+    "category": "Makanan",
+    "price": 42000,
+    "stock": 6,
+    "image": "avocado-toast.jpeg",
+    "description": "Roti sourdough panggang, alpukat lembut, dan bumbu racikan.",
+    "rating": 4.8
+  },
+  {
+    "id": "sandwich",
+    "name": "Chicken Sandwich",
+    "category": "Makanan",
+    "price": 39000,
+    "stock": 10,
+    "image": "chicken-sandwich.jpeg",
+    "description": "Ayam panggang, sayuran segar, dan saus khas dalam roti lembut.",
+    "rating": 4.7
+  },
+  {
+    "id": "donat",
+    "name": "Donat Cinnamon",
+    "category": "Snack",
+    "price": 18000,
+    "stock": 16,
+    "image": "donat-cinnamon.jpeg",
+    "description": "Donat empuk bertabur kayu manis dan gula halus.",
+    "rating": 4.6
+  },
+  {
+    "id": "cookies",
+    "name": "Cookies Cokelat",
+    "category": "Snack",
+    "price": 20000,
+    "stock": 22,
+    "image": "cookies-cokelat.jpeg",
+    "description": "Cookies renyah dengan potongan cokelat yang lumer di setiap gigitan.",
+    "rating": 4.8
+  },
+  {
+    "id": "cheesecake",
+    "name": "Cheesecake Berry",
+    "category": "Dessert",
+    "price": 36000,
+    "stock": 7,
+    "image": "cheesecake-berry.jpeg",
+    "description": "Cheesecake lembut dengan saus berry segar dan crumble renyah.",
+    "rating": 4.9
+  }
+]
