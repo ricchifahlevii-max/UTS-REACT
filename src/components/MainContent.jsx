@@ -81,19 +81,19 @@ function MenuCard({
         <p className="mt-1.5 line-clamp-2 min-h-10 text-xs leading-5 text-stone-500">
           {item.description}
         </p>
-        <div className="mt-4 flex items-center justify-between gap-2">
+        <div className="mt-4 flex flex-col items-stretch gap-3">
           <span className="text-base font-bold tracking-tight text-stone-900 sm:text-[17px]">
             {formatPrice(item.price)}
           </span>
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className="flex items-center justify-end gap-1.5">
             <div
               aria-label={`Jumlah ${item.name}`}
-              className="inline-flex h-9 items-center rounded-full border border-stone-200 bg-stone-50 p-0.5"
+              className="inline-flex h-11 items-center rounded-full border border-stone-200 bg-stone-50 p-0.5"
               role="group"
             >
               <button
                 aria-label={`Kurangi jumlah ${item.name}`}
-                className="grid size-7 place-items-center rounded-full text-stone-600 transition hover:bg-white hover:text-amber-900 disabled:cursor-not-allowed disabled:opacity-40"
+                className="grid size-9 place-items-center rounded-full text-stone-600 transition hover:bg-white hover:text-amber-900 disabled:cursor-not-allowed disabled:opacity-40"
                 disabled={selectedQuantity <= 1}
                 onClick={() => setQuantity(selectedQuantity - 1)}
                 type="button"
@@ -108,7 +108,7 @@ function MenuCard({
               </span>
               <button
                 aria-label={`Tambah jumlah ${item.name}`}
-                className="grid size-7 place-items-center rounded-full text-stone-600 transition hover:bg-white hover:text-amber-900 disabled:cursor-not-allowed disabled:opacity-40"
+                className="grid size-9 place-items-center rounded-full text-stone-600 transition hover:bg-white hover:text-amber-900 disabled:cursor-not-allowed disabled:opacity-40"
                 disabled={selectedQuantity >= availableStock}
                 onClick={() => setQuantity(selectedQuantity + 1)}
                 type="button"
@@ -118,7 +118,7 @@ function MenuCard({
             </div>
             <button
               aria-label={`Info ${item.name}`}
-              className="grid size-9 place-items-center rounded-full border border-stone-200 text-stone-600 transition hover:border-amber-700 hover:bg-amber-50 hover:text-amber-900"
+            className="grid size-11 place-items-center rounded-full border border-stone-200 text-stone-600 transition hover:border-amber-700 hover:bg-amber-50 hover:text-amber-900"
               onClick={() => onOpenProduct(item)}
               title="Info dan komentar"
               type="button"
@@ -127,7 +127,7 @@ function MenuCard({
             </button>
             <button
               aria-label={`Tambah ${item.name} ke keranjang`}
-              className="inline-flex h-9 items-center gap-1.5 rounded-full bg-amber-800 px-3 text-xs font-bold text-white shadow-sm shadow-amber-900/10 transition hover:-translate-y-0.5 hover:bg-amber-900 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex h-11 items-center gap-1.5 rounded-full bg-amber-800 px-3 text-xs font-bold text-white shadow-sm shadow-amber-900/10 transition hover:-translate-y-0.5 hover:bg-amber-900 disabled:cursor-not-allowed disabled:opacity-40"
               disabled={selectedQuantity <= 0}
               onClick={() => {
                 onAddToCart(item, selectedQuantity);
@@ -239,7 +239,7 @@ export default function MainContent({
       </div>
 
       <div className="mb-6 flex flex-col gap-3 rounded-3xl border border-stone-200/70 bg-white/90 p-3 shadow-[0_6px_24px_rgba(54,37,20,0.05)] sm:flex-row sm:items-center sm:justify-between sm:p-4">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+        <div className="flex min-w-0 max-w-full items-center gap-2 overflow-x-auto overscroll-x-contain pb-1 touch-pan-x sm:pb-0">
           <SlidersHorizontal
             className="mr-1 shrink-0 text-amber-800/70"
             size={16}

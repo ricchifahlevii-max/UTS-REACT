@@ -44,6 +44,12 @@
   }
 }
 
+@media (max-width: 639px) {
+  html {
+    scroll-padding-top: 8rem;
+  }
+}
+
 @layer components {
   .font-display {
     font-family: var(--font-display);

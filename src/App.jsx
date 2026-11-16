@@ -68,7 +68,7 @@ function Modal({ title, children, onClose, wide = false, motion = "default" }) {
 
   return (
     <div
-      className={`${closing ? "animate-overlay-exit pointer-events-none" : "animate-overlay-enter"} fixed inset-0 z-50 flex items-center justify-center bg-stone-950/55 p-4 backdrop-blur-sm`}
+      className={`${closing ? "animate-overlay-exit pointer-events-none" : "animate-overlay-enter"} fixed inset-0 z-50 flex items-center justify-center bg-stone-950/55 p-3 backdrop-blur-sm sm:p-4`}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) requestClose();
       }}
@@ -76,7 +76,7 @@ function Modal({ title, children, onClose, wide = false, motion = "default" }) {
       <section
         aria-label={title}
         aria-modal="true"
-        className={`relative max-h-[90vh] w-full overflow-y-auto rounded-[2rem] border border-white/60 bg-[#fffdfa] p-5 shadow-[0_24px_80px_rgba(27,18,11,0.28)] sm:p-7 ${wide ? "max-w-2xl" : "max-w-lg"} ${closing ? selectedMotion.exit : selectedMotion.enter}`}
+        className={`relative max-h-[calc(100dvh-1.5rem)] w-full overflow-y-auto rounded-[2rem] border border-white/60 bg-[#fffdfa] p-4 shadow-[0_24px_80px_rgba(27,18,11,0.28)] sm:max-h-[90vh] sm:p-7 ${wide ? "max-w-2xl" : "max-w-lg"} ${closing ? selectedMotion.exit : selectedMotion.enter}`}
         role="dialog"
       >
         <span
@@ -169,7 +169,7 @@ function CartDrawer({ onClose, onCheckout }) {
       <aside
         aria-label="Keranjang belanja"
         aria-modal="true"
-        className={`${closing ? "animate-cart-exit" : "animate-cart-enter"} flex h-full w-full max-w-md flex-col border-l border-white/30 bg-[#fffdfa] shadow-2xl`}
+        className={`${closing ? "animate-cart-exit" : "animate-cart-enter"} flex h-[100dvh] w-full max-w-md flex-col border-l border-white/30 bg-[#fffdfa] shadow-2xl`}
         role="dialog"
       >
         <div className="relative overflow-hidden border-b border-amber-900/10 bg-linear-to-br from-[#fff9ed] via-[#f7ecdc] to-[#f1e2cf] px-5 py-5 sm:px-7">
@@ -294,7 +294,7 @@ function CartDrawer({ onClose, onCheckout }) {
         </div>
 
         {items.length > 0 && (
-          <div className="border-t border-amber-900/10 bg-white px-5 py-5 shadow-[0_-8px_24px_rgba(54,37,20,0.04)] sm:px-7">
+          <div className="max-h-[55dvh] overflow-y-auto overscroll-contain border-t border-amber-900/10 bg-white px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(54,37,20,0.04)] sm:max-h-none sm:overflow-visible sm:px-7 sm:py-5">
             <form
               className="mb-4 rounded-2xl border border-stone-100 bg-[#faf8f4] p-3.5"
               onSubmit={applyPromo}
