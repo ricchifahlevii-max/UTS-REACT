@@ -309,6 +309,7 @@ function CartDrawer({ onClose, onCheckout }) {
                 <input
                   className="min-w-0 flex-1 rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm outline-none transition placeholder:text-stone-400 focus:border-amber-700 focus:ring-2 focus:ring-amber-700/10"
                   id="promo-code"
+                  name="promo-code"
                   onChange={(event) => setPromoInput(event.target.value)}
                   placeholder="DISKON10 / HEMAT50"
                   value={promoInput}
@@ -501,7 +502,10 @@ function ProductModal({ availableStock, product, reviews, onClose, onAddReview }
           className="rounded-3xl border border-stone-200/70 bg-[#faf8f4] p-4 sm:p-5"
           onSubmit={submitReview}
         >
-          <label className="mb-3 block text-sm font-bold text-stone-800">
+          <label
+            className="mb-3 block text-sm font-bold text-stone-800"
+            htmlFor="review-comment"
+          >
             Bagikan pengalamanmu
           </label>
           <div aria-label="Pilih rating" className="mb-3 flex gap-1.5">
@@ -522,6 +526,8 @@ function ProductModal({ availableStock, product, reviews, onClose, onAddReview }
             ))}
           </div>
           <textarea
+            id="review-comment"
+            name="review-comment"
             className="min-h-24 w-full resize-y rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-stone-400 focus:border-amber-700 focus:ring-4 focus:ring-amber-700/10"
             maxLength={240}
             minLength={3}
