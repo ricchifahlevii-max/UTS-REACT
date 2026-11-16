@@ -1,5 +1,16 @@
-import { useMemo, useState } from "react";
-import { ArrowUpRight, Clock3, ShoppingBag, Star, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ArrowUpRight,
+  Check,
+  Clock3,
+  Coffee,
+  Receipt,
+  ShoppingBag,
+  Star,
+  Tag,
+  Trash2,
+  X,
+} from "lucide-react";
 import Header from "./components/Header.jsx";
 import Footer from "./components/Footer.jsx";
 import MainContent from "./components/MainContent.jsx";
@@ -20,28 +31,66 @@ import {
   isValidPromo,
 } from "./utils/price.jsx";
 
-function Modal({ title, children, onClose, wide = false }) {
+function Modal({ title, children, onClose, wide = false, motion = "default" }) {
+  const closeStarted = useRef(false);
+  const motionClasses = {
+    default: {
+      enter: "animate-modal-enter",
+      exit: "animate-modal-exit",
+      exitDuration: 180,
+    },
+    info: {
+      enter: "animate-info-enter",
+      exit: "animate-info-exit",
+      exitDuration: 200,
+    },
+    history: {
+      enter: "animate-history-enter",
+      exit: "animate-history-exit",
+      exitDuration: 220,
+    },
+  };
+  const selectedMotion = motionClasses[motion] ?? motionClasses.default;
+  const [closing, setClosing] = useState(false);
+  const closeTimer = useRef(null);
+
+  useEffect(() => () => window.clearTimeout(closeTimer.current), []);
+
+  function requestClose() {
+    if (closeStarted.current) return;
+    closeStarted.current = true;
+    setClosing(true);
+    const delay = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? 0
+      : selectedMotion.exitDuration + 30;
+    closeTimer.current = window.setTimeout(onClose, delay);
+  }
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/55 p-4 backdrop-blur-sm"
+      className={`${closing ? "animate-overlay-exit pointer-events-none" : "animate-overlay-enter"} fixed inset-0 z-50 flex items-center justify-center bg-stone-950/55 p-4 backdrop-blur-sm`}
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (event.target === event.currentTarget) requestClose();
       }}
     >
       <section
         aria-label={title}
         aria-modal="true"
-        className={`max-h-[90vh] w-full overflow-y-auto rounded-3xl bg-white p-5 shadow-2xl sm:p-7 ${wide ? "max-w-2xl" : "max-w-lg"}`}
+        className={`relative max-h-[90vh] w-full overflow-y-auto rounded-[2rem] border border-white/60 bg-[#fffdfa] p-5 shadow-[0_24px_80px_rgba(27,18,11,0.28)] sm:p-7 ${wide ? "max-w-2xl" : "max-w-lg"} ${closing ? selectedMotion.exit : selectedMotion.enter}`}
         role="dialog"
       >
-        <div className="mb-5 flex items-center justify-between gap-4">
-          <h2 className="font-display text-xl font-bold text-stone-900 sm:text-2xl">
+        <span
+          aria-hidden="true"
+          className="absolute inset-x-7 top-0 h-0.5 bg-linear-to-r from-transparent via-amber-600 to-transparent"
+        />
+        <div className="mb-5 flex items-center justify-between gap-4 border-b border-amber-950/10 pb-4">
+          <h2 className="font-display text-xl font-bold tracking-tight text-stone-900 sm:text-2xl">
             {title}
           </h2>
           <button
             aria-label="Tutup"
-            className="icon-button"
-            onClick={onClose}
+            className="grid size-10 shrink-0 place-items-center rounded-full bg-stone-100 text-stone-500 transition hover:bg-amber-100 hover:text-amber-900"
+            onClick={requestClose}
             type="button"
           >
             <X size={19} />
@@ -54,8 +103,14 @@ function Modal({ title, children, onClose, wide = false }) {
 }
 
 function CartDrawer({ onClose, onCheckout }) {
-  const { items, changeQuantity, removeFromCart, clearCart } = useCart();
+  const { items, changeQuantity, removeFromCart, completePurchase } = useCart();
   const { notify } = useNotification();
+  const closeStarted = useRef(false);
+  const afterClose = useRef(null);
+  const closeTimer = useRef(null);
+  const [closing, setClosing] = useState(false);
+
+  useEffect(() => () => window.clearTimeout(closeTimer.current), []);
   const [promoInput, setPromoInput] = useState("");
   const [promoCode, setPromoCode] = useState("");
   const [promoError, setPromoError] = useState("");
@@ -78,104 +133,146 @@ function CartDrawer({ onClose, onCheckout }) {
     notify(message);
   }
 
+  function requestClose(afterCloseCallback) {
+    if (closeStarted.current) return;
+    closeStarted.current = true;
+    afterClose.current = afterCloseCallback;
+    setClosing(true);
+    const delay = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? 0
+      : 470;
+    closeTimer.current = window.setTimeout(() => {
+      onClose();
+      afterClose.current?.();
+      afterClose.current = null;
+    }, delay);
+  }
+
   function checkout() {
-    if (!items.length) return;
-    onCheckout({ items, subtotal, discount, serviceFee, total });
-    setPromoCode("");
-    setPromoInput("");
-    clearCart();
-    onClose();
+    if (!items.length || closeStarted.current) return;
+    const summary = { items, subtotal, discount, serviceFee, total };
+    requestClose(() => {
+      onCheckout(summary);
+      setPromoCode("");
+      setPromoInput("");
+      completePurchase();
+    });
   }
 
   return (
     <div
-      className="fixed inset-0 z-40 flex justify-end bg-stone-950/45 backdrop-blur-[2px]"
+      className={`${closing ? "animate-drawer-backdrop-exit pointer-events-none" : "animate-drawer-backdrop-enter"} fixed inset-0 z-40 flex justify-end bg-stone-950/50 backdrop-blur-sm`}
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (event.target === event.currentTarget) requestClose();
       }}
     >
       <aside
         aria-label="Keranjang belanja"
         aria-modal="true"
-        className="flex h-full w-full max-w-md flex-col bg-white shadow-2xl"
+        className={`${closing ? "animate-cart-exit" : "animate-cart-enter"} flex h-full w-full max-w-md flex-col border-l border-white/30 bg-[#fffdfa] shadow-2xl`}
         role="dialog"
       >
-        <div className="flex items-center justify-between border-b border-stone-100 px-5 py-5 sm:px-7">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-800">
-              Pesanan kamu
-            </p>
-            <h2 className="mt-1 font-display text-2xl font-bold text-stone-900">
-              Keranjang
-            </h2>
+        <div className="relative overflow-hidden border-b border-amber-900/10 bg-linear-to-br from-[#fff9ed] via-[#f7ecdc] to-[#f1e2cf] px-5 py-5 sm:px-7">
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-10 -top-20 size-48 rounded-full bg-amber-300/25 blur-3xl"
+          />
+          <div className="relative flex items-center justify-between gap-4">
+            <div>
+              <p className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-800">
+                <Coffee size={13} /> Pesanan kamu
+              </p>
+              <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-stone-900">
+                Keranjang
+              </h2>
+              <p className="mt-1 text-xs text-stone-500">
+                {items.reduce((count, item) => count + item.quantity, 0)} item siap menemani harimu
+              </p>
+            </div>
+            <button
+              aria-label="Tutup keranjang"
+              className="relative grid size-10 shrink-0 place-items-center rounded-full border border-white/70 bg-white/70 text-stone-600 transition hover:bg-white hover:text-stone-950"
+              onClick={() => requestClose()}
+              type="button"
+            >
+              <X size={19} />
+            </button>
           </div>
-          <button
-            aria-label="Tutup keranjang"
-            className="icon-button"
-            onClick={onClose}
-            type="button"
-          >
-            <X size={19} />
-          </button>
         </div>
 
-        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:px-7">
+        <div className="flex-1 space-y-3 overflow-y-auto px-5 py-5 sm:px-7">
           {!items.length ? (
-            <div className="flex h-full min-h-64 flex-col items-center justify-center text-center">
-              <span className="mb-4 grid size-16 place-items-center rounded-full bg-amber-50 text-amber-800">
+            <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-3xl border border-dashed border-amber-900/15 bg-linear-to-br from-white to-amber-50/70 px-5 text-center">
+              <span className="mb-4 grid size-16 place-items-center rounded-2xl bg-amber-100 text-amber-900 shadow-sm">
                 <ShoppingBag size={26} />
               </span>
-              <h3 className="font-display text-lg font-bold text-stone-900">
+              <h3 className="font-display text-xl font-bold text-stone-900">
                 Keranjang masih kosong
               </h3>
-              <p className="mt-1 max-w-xs text-sm leading-6 text-stone-500">
+              <p className="mt-2 max-w-xs text-sm leading-6 text-stone-500">
                 Yuk, pilih menu favoritmu dan nikmati hari dengan lebih hangat.
               </p>
             </div>
           ) : (
             items.map((item) => (
               <article
-                className="flex gap-3 rounded-2xl border border-stone-100 p-3"
+                className="flex gap-3 rounded-3xl border border-stone-200/70 bg-white p-3 shadow-[0_4px_16px_rgba(54,37,20,0.04)] transition hover:border-amber-200 hover:shadow-[0_8px_24px_rgba(54,37,20,0.08)]"
                 key={item.id}
               >
-                <div className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-xl bg-amber-50 text-2xl">
+                <div className="relative grid size-[4.5rem] shrink-0 place-items-center overflow-hidden rounded-2xl bg-amber-50 text-2xl">
                   <img
                     alt=""
-                    className="size-full object-cover"
+                    className="absolute inset-0 size-full object-cover"
                     onError={(event) => {
                       event.currentTarget.hidden = true;
                     }}
                     src={item.image}
                   />
-                  <span className="-mt-16">
+                  <span className="pointer-events-none relative">
                     <MenuIcon category={item.category} size={25} />
                   </span>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="truncate font-semibold text-stone-900">
-                    {item.name}
-                  </h3>
-                  <p className="mt-1 text-sm font-medium text-amber-800">
-                    {formatPrice(item.price)}
-                  </p>
-                  <div className="mt-2 flex items-center gap-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-amber-800">
+                        {item.category}
+                      </p>
+                      <h3 className="mt-0.5 truncate text-sm font-bold text-stone-900">
+                        {item.name}
+                      </h3>
+                    </div>
+                    <button
+                      aria-label={`Hapus ${item.name}`}
+                      className="grid size-8 shrink-0 place-items-center rounded-full text-stone-400 transition hover:bg-rose-50 hover:text-rose-600"
+                      onClick={() => {
+                        removeFromCart(item.id);
+                        notify(`${item.name} dihapus dari keranjang`);
+                      }}
+                      type="button"
+                    >
+                      <X size={15} />
+                    </button>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <div className="inline-flex items-center rounded-full border border-stone-200 bg-stone-50 p-0.5">
                     <button
                       aria-label={`Kurangi ${item.name}`}
-                      className="quantity-button"
+                      className="grid size-7 place-items-center rounded-full text-stone-600 transition hover:bg-white hover:text-amber-900"
                       onClick={() => {
                         changeQuantity(item.id, -1);
                         notify(`${item.name} diperbarui di keranjang`);
                       }}
                       type="button"
                     >
-                      −
+                      <span aria-hidden="true">−</span>
                     </button>
-                    <span className="w-5 text-center text-sm font-semibold">
+                    <span className="w-7 text-center text-xs font-bold tabular-nums text-stone-800">
                       {item.quantity}
                     </span>
                     <button
                       aria-label={`Tambah ${item.name}`}
-                      className="quantity-button"
+                      className="grid size-7 place-items-center rounded-full text-stone-600 transition hover:bg-white hover:text-amber-900 disabled:cursor-not-allowed disabled:opacity-40"
                       disabled={item.quantity >= item.stock}
                       onClick={() => {
                         changeQuantity(item.id, 1);
@@ -183,19 +280,12 @@ function CartDrawer({ onClose, onCheckout }) {
                       }}
                       type="button"
                     >
-                      +
+                      <span aria-hidden="true">+</span>
                     </button>
-                    <button
-                      aria-label={`Hapus ${item.name}`}
-                      className="ml-auto p-1 text-xs font-medium text-stone-400 hover:text-red-600"
-                      onClick={() => {
-                        removeFromCart(item.id);
-                        notify(`${item.name} dihapus dari keranjang`);
-                      }}
-                      type="button"
-                    >
-                      Hapus
-                    </button>
+                    </div>
+                    <p className="text-right text-xs font-bold text-stone-900">
+                      {formatPrice(item.price * item.quantity)}
+                    </p>
                   </div>
                 </div>
               </article>
@@ -204,17 +294,20 @@ function CartDrawer({ onClose, onCheckout }) {
         </div>
 
         {items.length > 0 && (
-          <div className="border-t border-stone-100 px-5 py-5 sm:px-7">
-            <form className="mb-4" onSubmit={applyPromo}>
+          <div className="border-t border-amber-900/10 bg-white px-5 py-5 shadow-[0_-8px_24px_rgba(54,37,20,0.04)] sm:px-7">
+            <form
+              className="mb-4 rounded-2xl border border-stone-100 bg-[#faf8f4] p-3.5"
+              onSubmit={applyPromo}
+            >
               <label
-                className="mb-2 block text-xs font-semibold uppercase tracking-wider text-stone-500"
+                className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-stone-500"
                 htmlFor="promo-code"
               >
-                Kode promo
+                <Tag size={13} className="text-amber-800" /> Kode promo
               </label>
               <div className="flex gap-2">
                 <input
-                  className="min-w-0 flex-1 rounded-xl border border-stone-200 px-3 py-2.5 text-sm outline-none transition focus:border-amber-700 focus:ring-2 focus:ring-amber-700/10"
+                  className="min-w-0 flex-1 rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm outline-none transition placeholder:text-stone-400 focus:border-amber-700 focus:ring-2 focus:ring-amber-700/10"
                   id="promo-code"
                   onChange={(event) => setPromoInput(event.target.value)}
                   placeholder="DISKON10 / HEMAT50"
@@ -236,7 +329,7 @@ function CartDrawer({ onClose, onCheckout }) {
                 </p>
               )}
             </form>
-            <div className="space-y-2 text-sm">
+            <div className="space-y-2.5 rounded-2xl border border-stone-100 bg-[#faf8f4] p-4 text-sm">
               <div className="flex justify-between text-stone-500">
                 <span>Subtotal</span>
                 <span>{formatPrice(subtotal)}</span>
@@ -251,13 +344,13 @@ function CartDrawer({ onClose, onCheckout }) {
                   <span>−{formatPrice(discount)}</span>
                 </div>
               )}
-              <div className="flex justify-between border-t border-dashed border-stone-200 pt-3 text-base font-bold text-stone-900">
+              <div className="flex justify-between border-t border-dashed border-stone-300 pt-3 text-base font-bold text-stone-900">
                 <span>Total pembayaran</span>
                 <span>{formatPrice(total)}</span>
               </div>
             </div>
             <button
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-amber-800 px-5 py-3.5 text-sm font-bold text-white transition hover:bg-amber-900 disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-linear-to-r from-amber-800 to-amber-900 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-amber-900/15 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-amber-900/20 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={!items.length}
               onClick={checkout}
               type="button"
@@ -274,7 +367,7 @@ function CartDrawer({ onClose, onCheckout }) {
   );
 }
 
-function ProductModal({ product, reviews, onClose, onAddReview }) {
+function ProductModal({ availableStock, product, reviews, onClose, onAddReview }) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const { notify } = useNotification();
@@ -302,56 +395,77 @@ function ProductModal({ product, reviews, onClose, onAddReview }) {
   }
 
   return (
-    <Modal onClose={onClose} title={product.name} wide>
-      <div className="grid gap-6 sm:grid-cols-[0.9fr_1.1fr]">
-        <div className="relative min-h-52 overflow-hidden rounded-2xl bg-amber-50">
-          <span className="absolute inset-0 grid place-items-center text-amber-800/50">
+    <Modal motion="info" onClose={onClose} title={product.name} wide>
+      <div className="grid gap-5 sm:grid-cols-[0.95fr_1.05fr] sm:gap-6">
+        <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-amber-900/10 bg-linear-to-br from-amber-100 to-stone-100 sm:aspect-auto sm:min-h-64">
+          <span className="pointer-events-none absolute inset-0 z-10 grid place-items-center text-amber-800/50">
             <MenuIcon category={product.category} size={52} />
           </span>
           <img
             alt={product.name}
-            className="relative size-full min-h-52 object-cover"
+            className="absolute inset-0 size-full object-cover"
             onError={(event) => {
               event.currentTarget.hidden = true;
             }}
             src={product.image}
           />
-        </div>
-        <div>
-          <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-900">
+          <span className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-24 bg-linear-to-t from-stone-950/45 to-transparent" />
+          <span className="absolute left-3 top-3 z-20 rounded-full border border-white/60 bg-white/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-700 shadow-sm backdrop-blur">
             {product.category}
           </span>
-          <p className="mt-4 text-2xl font-bold text-stone-900">
-            {formatPrice(product.price)}
-          </p>
-          <p className="mt-2 text-sm leading-6 text-stone-600">
+          <span className={`absolute bottom-3 left-3 z-20 rounded-full px-3 py-1.5 text-[10px] font-bold shadow-sm ${availableStock > 5 ? "bg-emerald-500 text-white" : availableStock > 0 ? "bg-amber-400 text-stone-950" : "bg-rose-600 text-white"}`}>
+            {availableStock > 0 ? `${availableStock} stok tersedia` : "Stok habis"}
+          </span>
+        </div>
+        <div className="flex flex-col justify-center">
+          <div className="rounded-2xl border border-amber-900/10 bg-linear-to-br from-amber-50 to-[#fffaf2] p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-800">
+              Harga menu
+            </p>
+            <p className="mt-1 text-2xl font-bold tracking-tight text-stone-900">
+              {formatPrice(product.price)}
+            </p>
+          </div>
+          <p className="mt-4 text-sm leading-6 text-stone-600">
             {product.description}
           </p>
           <div className="mt-4 flex flex-wrap gap-2 text-xs text-stone-500">
-            <span className="flex items-center gap-1 rounded-lg bg-stone-100 px-2.5 py-1.5">
+            <span className="flex items-center gap-1.5 rounded-full border border-amber-900/5 bg-amber-50 px-3 py-2 font-semibold text-amber-900">
               <Star fill="currentColor" size={12} /> {averageRating.toFixed(1)}{" "}
-              rating
+              <span className="font-medium text-amber-800/70">rating</span>
             </span>
-            <span className="rounded-lg bg-stone-100 px-2.5 py-1.5">
-              {product.stock} tersedia
+            <span
+              aria-live="polite"
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-2 font-semibold ${availableStock > 5 ? "bg-emerald-50 text-emerald-700" : availableStock > 0 ? "bg-amber-50 text-amber-800" : "bg-rose-50 text-rose-700"}`}
+            >
+              <ShoppingBag size={12} />
+              Stok tersedia: {availableStock}
             </span>
           </div>
         </div>
       </div>
 
-      <div className="mt-7 border-t border-stone-100 pt-5">
+      <div className="mt-7 border-t border-amber-950/10 pt-5">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="font-display text-lg font-bold text-stone-900">
-            Ulasan pelanggan
-          </h3>
-          <span className="text-xs text-stone-400">
-            Terbaru · maks. 3 ditampilkan
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-800">
+              Cerita pelanggan
+            </p>
+            <h3 className="mt-1 font-display text-lg font-bold text-stone-900">
+              Ulasan pelanggan
+            </h3>
+          </div>
+          <span className="rounded-full bg-stone-100 px-3 py-1.5 text-[10px] font-semibold text-stone-500">
+            {recentReviews.length} ulasan
           </span>
         </div>
         {recentReviews.length ? (
           <div className="mb-5 space-y-3">
             {recentReviews.map((review) => (
-              <article className="rounded-xl bg-stone-50 p-3" key={review.id}>
+              <article
+                className="rounded-2xl border border-stone-200/70 bg-white p-4 shadow-[0_4px_16px_rgba(54,37,20,0.035)]"
+                key={review.id}
+              >
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-stone-800">
                     Pelanggan Kopi
@@ -374,20 +488,28 @@ function ProductModal({ product, reviews, onClose, onAddReview }) {
             ))}
           </div>
         ) : (
-          <p className="mb-5 text-sm text-stone-500">
-            Belum ada ulasan. Jadilah yang pertama memberi komentar!
-          </p>
+          <div className="mb-5 flex items-center gap-3 rounded-2xl border border-dashed border-amber-900/15 bg-amber-50/60 p-4">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-amber-700 shadow-sm">
+              <Star size={17} />
+            </span>
+            <p className="text-sm leading-5 text-stone-600">
+              Belum ada ulasan. Jadilah yang pertama memberi komentar!
+            </p>
+          </div>
         )}
-        <form className="rounded-2xl bg-[#faf8f4] p-4" onSubmit={submitReview}>
-          <label className="mb-2 block text-sm font-semibold text-stone-800">
-            Tulis komentar
+        <form
+          className="rounded-3xl border border-stone-200/70 bg-[#faf8f4] p-4 sm:p-5"
+          onSubmit={submitReview}
+        >
+          <label className="mb-3 block text-sm font-bold text-stone-800">
+            Bagikan pengalamanmu
           </label>
-          <div aria-label="Pilih rating" className="mb-3 flex gap-1">
+          <div aria-label="Pilih rating" className="mb-3 flex gap-1.5">
             {[1, 2, 3, 4, 5].map((value) => (
               <button
                 aria-label={`${value} bintang`}
                 aria-pressed={rating === value}
-                className={`rounded-md p-1 ${rating >= value ? "text-amber-500" : "text-stone-300"}`}
+                className={`grid size-9 place-items-center rounded-xl transition ${rating >= value ? "bg-amber-100 text-amber-600" : "bg-white text-stone-300 hover:bg-amber-50 hover:text-amber-500"}`}
                 key={value}
                 onClick={() => setRating(value)}
                 type="button"
@@ -400,7 +522,7 @@ function ProductModal({ product, reviews, onClose, onAddReview }) {
             ))}
           </div>
           <textarea
-            className="min-h-20 w-full resize-y rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-amber-700 focus:ring-2 focus:ring-amber-700/10"
+            className="min-h-24 w-full resize-y rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-stone-400 focus:border-amber-700 focus:ring-4 focus:ring-amber-700/10"
             maxLength={240}
             minLength={3}
             onChange={(event) => setComment(event.target.value)}
@@ -412,7 +534,7 @@ function ProductModal({ product, reviews, onClose, onAddReview }) {
               {comment.length}/240 karakter
             </span>
             <button
-              className="rounded-full bg-stone-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-amber-900 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-full bg-amber-800 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-amber-900 disabled:cursor-not-allowed disabled:opacity-40"
               disabled={comment.trim().length < 3}
               type="submit"
             >
@@ -427,55 +549,82 @@ function ProductModal({ product, reviews, onClose, onAddReview }) {
 
 function HistoryModal({ orders, onClose, onReset }) {
   return (
-    <Modal onClose={onClose} title="Riwayat transaksi" wide>
+    <Modal motion="history" onClose={onClose} title="Riwayat transaksi" wide>
       {orders.length ? (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {orders.map((order) => (
             <article
-              className="rounded-2xl border border-stone-100 p-4 sm:p-5"
+              className="overflow-hidden rounded-3xl border border-stone-200/70 bg-white shadow-[0_6px_24px_rgba(54,37,20,0.05)]"
               key={order.id}
             >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs text-stone-400">
-                    {new Date(order.date).toLocaleString("id-ID", {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    })}
-                  </p>
-                  <h3 className="mt-1 font-semibold text-stone-900">
-                    {order.items
-                      .map((item) => `${item.quantity}× ${item.name}`)
-                      .join(", ")}
-                  </h3>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-100 bg-linear-to-r from-[#fffaf0] to-white px-4 py-4 sm:px-5">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-900">
+                    <Receipt size={19} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-amber-800">
+                      Pesanan #{order.id.slice(-6)}
+                    </p>
+                    <p className="mt-1 text-xs text-stone-500">
+                      {new Date(order.date).toLocaleString("id-ID", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
+                    </p>
+                  </div>
                 </div>
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+                  <Check size={13} strokeWidth={2.5} />
                   Lunas
                 </span>
               </div>
-              <div className="mt-4 flex items-center justify-between border-t border-dashed border-stone-200 pt-3">
-                <span className="text-sm text-stone-500">Total belanja</span>
-                <span className="font-bold text-stone-900">
-                  {formatPrice(order.total)}
-                </span>
+              <div className="space-y-2 px-4 py-4 sm:px-5">
+                {order.items.map((item) => (
+                  <div
+                    className="flex items-center justify-between gap-3 text-sm"
+                    key={item.id}
+                  >
+                    <span className="min-w-0 truncate text-stone-600">
+                      <strong className="mr-2 text-stone-900">
+                        {item.quantity}×
+                      </strong>
+                      {item.name}
+                    </span>
+                    <span className="shrink-0 font-medium text-stone-700">
+                      {formatPrice(item.price * item.quantity)}
+                    </span>
+                  </div>
+                ))}
+                <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-[#faf8f4] px-4 py-3">
+                  <span className="text-xs font-semibold text-stone-500">
+                    Total belanja
+                  </span>
+                  <span className="font-bold text-stone-900">
+                    {formatPrice(order.total)}
+                  </span>
+                </div>
               </div>
             </article>
           ))}
           <button
-            className="mt-3 w-full rounded-full border border-red-200 px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50"
+            className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-full border border-rose-200 bg-white px-4 py-3 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-50"
             onClick={onReset}
             type="button"
           >
+            <Trash2 size={16} />
             Hapus riwayat transaksi
           </button>
         </div>
       ) : (
-        <div className="py-10 text-center">
-          <span className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-stone-100 text-stone-500">
-            <Clock3 size={22} />
+        <div className="rounded-3xl border border-dashed border-amber-900/15 bg-linear-to-br from-white to-amber-50/60 px-5 py-12 text-center">
+          <span className="mx-auto mb-4 grid size-16 place-items-center rounded-2xl bg-amber-100 text-amber-900 shadow-sm">
+            <Clock3 size={24} />
           </span>
-          <h3 className="font-semibold text-stone-900">Belum ada transaksi</h3>
-          <p className="mt-1 text-sm text-stone-500">
+          <h3 className="font-display text-xl font-bold text-stone-900">
+            Belum ada transaksi
+          </h3>
+          <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-stone-500">
             Pesanan yang sudah dibayar akan tersimpan di sini.
           </p>
         </div>
@@ -530,7 +679,7 @@ function AppContent() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [confirmReset, setConfirmReset] = useState(false);
-  const { items: cartItems, addToCart } = useCart();
+  const { items: cartItems, availableStocks, addToCart } = useCart();
   const { notify } = useNotification();
 
   const filteredItems = useMemo(() => {
@@ -627,16 +776,20 @@ function AppContent() {
         <MainContent
           activeCollection={collection}
           category={category}
+          availableStocks={availableStocks}
           favoriteCount={favorites.length}
           items={filteredItems}
-          onAddToCart={(product) => {
-            const existing = cartItems.find((item) => item.id === product.id);
-            if (existing?.quantity >= product.stock) {
-              notify("Stok menu ini sudah habis");
+          onAddToCart={(product, quantity) => {
+            if (!addToCart(product, quantity)) {
+              const availableStock = availableStocks[product.id] ?? 0;
+              notify(
+                availableStock > 0
+                  ? `Stok ${product.name} tersisa ${availableStock}`
+                  : `Stok ${product.name} sudah habis`,
+              );
               return;
             }
-            addToCart(product);
-            notify(`${product.name} ditambahkan ke keranjang`);
+            notify(`${quantity} ${product.name} ditambahkan ke keranjang`);
           }}
           onCategoryChange={setCategory}
           onCollectionChange={setCollection}
@@ -663,6 +816,7 @@ function AppContent() {
       )}
       {selectedProduct && (
         <ProductModal
+          availableStock={availableStocks[selectedProduct.id] ?? selectedProduct.stock}
           onAddReview={addReview}
           onClose={() => setSelectedProduct(null)}
           product={selectedProduct}

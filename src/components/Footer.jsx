@@ -1,20 +1,32 @@
 import { ArrowUpRight, Coffee } from "lucide-react";
 import menuItems from "../data/menu.jsx";
+import cafeInterior from "../assets/images/cafe-interior.jpg";
 
 const categories = [...new Set(menuItems.map((item) => item.category))];
 
 export default function Footer() {
   return (
-    <footer className="relative overflow-hidden border-t border-amber-400/40 bg-linear-to-br from-[#1a100b] via-[#302016] to-[#1d140f] text-stone-100">
-      <span
+    <footer className="relative isolate overflow-hidden border-t border-amber-400/40 bg-stone-950 text-stone-100">
+      <img
+        alt=""
         aria-hidden="true"
-        className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-amber-300/80 to-transparent"
+        className="absolute inset-0 z-0 size-full object-cover object-[center_55%]"
+        decoding="async"
+        src={cafeInterior}
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-24 -top-32 size-80 rounded-full bg-amber-400/15 blur-3xl"
+        className="absolute inset-0 z-0 bg-linear-to-br from-[#1a100b]/85 via-[#302016]/80 to-[#1d140f]/85"
       />
-      <div className="relative mx-auto max-w-7xl px-5 sm:px-8 lg:px-12">
+      <span
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 z-20 h-px bg-linear-to-r from-transparent via-amber-300/80 to-transparent"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-24 -top-32 z-0 size-80 rounded-full bg-amber-400/15 blur-3xl"
+      />
+      <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-8 lg:px-12">
         <div className="grid gap-8 py-10 sm:grid-cols-2 sm:gap-8 sm:py-12 lg:grid-cols-[1.4fr_0.7fr_1fr] lg:gap-12">
           <div>
             <a

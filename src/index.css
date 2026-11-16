@@ -49,6 +49,166 @@
     font-family: var(--font-display);
   }
 
+  @keyframes overlay-enter {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes overlay-exit {
+    from {
+      opacity: 1;
+    }
+
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes cart-enter {
+    from {
+      opacity: 0.85;
+      transform: translateX(100%);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes cart-exit {
+    from {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    to {
+      opacity: 0.85;
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes modal-enter {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.97);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes modal-exit {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    to {
+      opacity: 0;
+      transform: translateY(8px) scale(0.97);
+    }
+  }
+
+  @keyframes info-enter {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.95);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes info-exit {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    to {
+      opacity: 0;
+      transform: translateY(8px) scale(0.96);
+    }
+  }
+
+  @keyframes history-enter {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.985);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes history-exit {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    to {
+      opacity: 0;
+      transform: translateY(14px) scale(0.99);
+    }
+  }
+
+  .animate-overlay-enter,
+  .animate-drawer-backdrop-enter {
+    animation: overlay-enter 220ms ease-out both;
+  }
+
+  .animate-overlay-exit {
+    animation: overlay-exit 240ms ease-in both;
+  }
+
+  .animate-drawer-backdrop-exit {
+    animation: overlay-exit 450ms ease-in-out both;
+  }
+
+  .animate-cart-enter {
+    animation: cart-enter 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-cart-exit {
+    animation: cart-exit 450ms cubic-bezier(0.42, 0, 0.58, 1) both;
+  }
+
+  .animate-modal-enter {
+    animation: modal-enter 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .animate-modal-exit {
+    animation: modal-exit 180ms ease-in both;
+  }
+
+  .animate-info-enter {
+    animation: info-enter 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .animate-info-exit {
+    animation: info-exit 200ms ease-in both;
+  }
+
+  .animate-history-enter {
+    animation: history-enter 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .animate-history-exit {
+    animation: history-exit 220ms ease-in both;
+  }
   .icon-button {
     display: inline-flex;
     width: 2.5rem;
@@ -87,5 +247,22 @@
   .quantity-button:disabled {
     cursor: not-allowed;
     opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-overlay-enter,
+  .animate-overlay-exit,
+  .animate-drawer-backdrop-enter,
+  .animate-drawer-backdrop-exit,
+  .animate-cart-enter,
+  .animate-cart-exit,
+  .animate-modal-enter,
+  .animate-modal-exit,
+  .animate-info-enter,
+  .animate-info-exit,
+  .animate-history-enter,
+  .animate-history-exit {
+    animation-duration: 0.01ms;
   }
 }

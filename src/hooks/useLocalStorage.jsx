@@ -14,8 +14,8 @@ function readStoredValue(key, initialValue, isValid = () => true) {
   }
 }
 
-export function useLocalStorage(key, initialValue) {
-  const [value, setValue] = useState(() => readStoredValue(key, initialValue))
+export function useLocalStorage(key, initialValue, isValid) {
+  const [value, setValue] = useState(() => readStoredValue(key, initialValue, isValid))
 
   const updateValue = useCallback((nextValue) => {
     setValue((currentValue) => {
