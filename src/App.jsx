@@ -4,11 +4,15 @@ import {
   Check,
   Clock3,
   Coffee,
+  MapPin,
+  Phone,
   Receipt,
   ShoppingBag,
   Star,
+  Store,
   Tag,
   Trash2,
+  UserRound,
   X,
 } from "lucide-react";
 import Header from "./components/Header.jsx";
@@ -30,6 +34,15 @@ import {
   formatPrice,
   isValidPromo,
 } from "./utils/price.jsx";
+
+function getLocalDateTimeValue() {
+  const now = new Date();
+  now.setSeconds(0, 0);
+  now.setMinutes(now.getMinutes() + 1);
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60_000)
+    .toISOString()
+    .slice(0, 16);
+}
 
 function Modal({ title, children, onClose, wide = false, motion = "default" }) {
   const closeStarted = useRef(false);
@@ -114,6 +127,7 @@ function CartDrawer({ onClose, onCheckout }) {
   const [promoInput, setPromoInput] = useState("");
   const [promoCode, setPromoCode] = useState("");
   const [promoError, setPromoError] = useState("");
+  const [checkoutSummary, setCheckoutSummary] = useState(null);
   const subtotal = calculateSubtotal(items);
   const discount = calculateDiscount(subtotal, promoCode);
   const serviceFee = calculateServiceFee(subtotal);
@@ -150,9 +164,14 @@ function CartDrawer({ onClose, onCheckout }) {
 
   function checkout() {
     if (!items.length || closeStarted.current) return;
-    const summary = { items, subtotal, discount, serviceFee, total };
+    setCheckoutSummary({ items, subtotal, discount, serviceFee, total });
+  }
+
+  function confirmCheckout(fulfillment) {
+    const summary = checkoutSummary;
+    setCheckoutSummary(null);
     requestClose(() => {
-      onCheckout(summary);
+      onCheckout({ ...summary, fulfillment });
       setPromoCode("");
       setPromoInput("");
       completePurchase();
@@ -356,7 +375,7 @@ function CartDrawer({ onClose, onCheckout }) {
               onClick={checkout}
               type="button"
             >
-              Bayar sekarang <ArrowUpRight size={17} />
+              Lanjutkan pemesanan <ArrowUpRight size={17} />
             </button>
             <p className="mt-3 text-center text-[11px] text-stone-400">
               HEMAT50 memotong Rp50.000 dari total belanja.
@@ -364,7 +383,226 @@ function CartDrawer({ onClose, onCheckout }) {
           </div>
         )}
       </aside>
+      {checkoutSummary && (
+        <CheckoutModal
+          onClose={() => setCheckoutSummary(null)}
+          onSubmit={confirmCheckout}
+          summary={checkoutSummary}
+        />
+      )}
     </div>
+  );
+}
+
+function CheckoutModal({ onClose, onSubmit, summary }) {
+  const [method, setMethod] = useState("pickup");
+  const [schedule, setSchedule] = useState("asap");
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [validationError, setValidationError] = useState("");
+  const [minimumDateTime, setMinimumDateTime] = useState(
+    getLocalDateTimeValue,
+  );
+
+  function submit(event) {
+    event.preventDefault();
+    if (
+      !customerName.trim() ||
+      !phone.trim() ||
+      (method === "delivery" && !address.trim())
+    ) {
+      setValidationError("Lengkapi detail pemesanan dengan informasi yang valid.");
+      return;
+    }
+    if (
+      schedule === "scheduled" &&
+      new Date(scheduledAt).getTime() < Date.now()
+    ) {
+      setValidationError("Pilih waktu pemesanan yang belum terlewati.");
+      return;
+    }
+    setValidationError("");
+    onSubmit({
+      method,
+      customerName: customerName.trim(),
+      phone: phone.trim(),
+      address: method === "delivery" ? address.trim() : "",
+      scheduledAt: schedule === "scheduled" ? scheduledAt : "",
+    });
+  }
+
+  return (
+    <Modal onClose={onClose} title="Detail pemesanan" wide>
+      <form className="space-y-5" onSubmit={submit}>
+        <fieldset>
+          <legend className="mb-2 text-sm font-bold text-stone-800">
+            Cara menerima pesanan
+          </legend>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { value: "pickup", label: "Pickup", Icon: Store },
+              { value: "delivery", label: "Delivery", Icon: MapPin },
+            ].map(({ value, label, Icon }) => (
+              <label
+                className={`flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl border p-3 transition ${method === value ? "border-amber-700 bg-amber-50 text-amber-900" : "border-stone-200 bg-white text-stone-600 hover:border-amber-300"}`}
+                key={value}
+              >
+                <input
+                  checked={method === value}
+                  className="sr-only"
+                  name="fulfillment-method"
+                  onChange={() => setMethod(value)}
+                  type="radio"
+                  value={value}
+                />
+                <Icon aria-hidden="true" className="pointer-events-none" size={18} />
+                <span className="text-sm font-semibold">{label}</span>
+              </label>
+            ))}
+          </div>
+          {method === "delivery" && (
+            <p className="mt-2 text-xs leading-5 text-stone-500">
+              Biaya antar belum diterapkan pada versi ini.
+            </p>
+          )}
+        </fieldset>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block text-sm font-semibold text-stone-700">
+            Nama pemesan
+            <span className="relative mt-1.5 block">
+              <UserRound
+                aria-hidden="true"
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
+                size={16}
+              />
+              <input
+                autoComplete="name"
+                className="w-full rounded-xl border border-stone-200 bg-white py-2.5 pl-9 pr-3 text-sm font-normal outline-none transition focus:border-amber-700 focus:ring-4 focus:ring-amber-700/10"
+                maxLength={80}
+                onChange={(event) => {
+                  setCustomerName(event.target.value);
+                  setValidationError("");
+                }}
+                required
+                value={customerName}
+              />
+            </span>
+          </label>
+          <label className="block text-sm font-semibold text-stone-700">
+            Nomor WhatsApp
+            <span className="relative mt-1.5 block">
+              <Phone
+                aria-hidden="true"
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
+                size={16}
+              />
+              <input
+                autoComplete="tel"
+                className="w-full rounded-xl border border-stone-200 bg-white py-2.5 pl-9 pr-3 text-sm font-normal outline-none transition focus:border-amber-700 focus:ring-4 focus:ring-amber-700/10"
+                maxLength={20}
+                minLength={8}
+                onChange={(event) => {
+                  setPhone(event.target.value);
+                  setValidationError("");
+                }}
+                placeholder="08xxxxxxxxxx"
+                required
+                type="tel"
+                value={phone}
+              />
+            </span>
+          </label>
+        </div>
+
+        {method === "delivery" && (
+          <label className="block text-sm font-semibold text-stone-700">
+            Alamat pengantaran
+            <textarea
+              autoComplete="street-address"
+              className="mt-1.5 min-h-24 w-full resize-y rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm font-normal outline-none transition placeholder:text-stone-400 focus:border-amber-700 focus:ring-4 focus:ring-amber-700/10"
+              maxLength={300}
+              minLength={10}
+              onChange={(event) => {
+                setAddress(event.target.value);
+                setValidationError("");
+              }}
+              placeholder="Nama jalan, nomor, kecamatan, dan patokan"
+              required
+              value={address}
+            />
+          </label>
+        )}
+
+        <fieldset>
+          <legend className="mb-2 text-sm font-bold text-stone-800">
+            Waktu pesanan
+          </legend>
+          <div className="flex flex-wrap gap-2">
+            <label
+              className={`cursor-pointer rounded-full border px-3 py-2 text-xs font-semibold transition ${schedule === "asap" ? "border-amber-700 bg-amber-50 text-amber-900" : "border-stone-200 text-stone-600 hover:border-amber-300"}`}
+            >
+              <input
+                checked={schedule === "asap"}
+                className="sr-only"
+                name="order-schedule"
+                onChange={() => setSchedule("asap")}
+                type="radio"
+              />
+              Secepatnya
+            </label>
+            <label
+              className={`cursor-pointer rounded-full border px-3 py-2 text-xs font-semibold transition ${schedule === "scheduled" ? "border-amber-700 bg-amber-50 text-amber-900" : "border-stone-200 text-stone-600 hover:border-amber-300"}`}
+            >
+              <input
+                checked={schedule === "scheduled"}
+                className="sr-only"
+                name="order-schedule"
+                onChange={() => {
+                  setMinimumDateTime(getLocalDateTimeValue());
+                  setSchedule("scheduled");
+                }}
+                type="radio"
+              />
+              Jadwalkan
+            </label>
+          </div>
+          {schedule === "scheduled" && (
+            <input
+              aria-label="Tanggal dan waktu pesanan"
+              className="mt-3 w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-amber-700 focus:ring-4 focus:ring-amber-700/10"
+              min={minimumDateTime}
+              onChange={(event) => setScheduledAt(event.target.value)}
+              required
+              type="datetime-local"
+              value={scheduledAt}
+            />
+          )}
+        </fieldset>
+
+        {validationError && (
+          <p aria-live="polite" className="text-sm text-red-700" role="alert">
+            {validationError}
+          </p>
+        )}
+        <div className="flex items-center justify-between rounded-2xl bg-[#faf8f4] px-4 py-3">
+          <span className="text-sm font-semibold text-stone-600">
+            Total pesanan
+          </span>
+          <span className="font-bold text-stone-900">
+            {formatPrice(summary.total)}
+          </span>
+        </div>
+        <button
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-linear-to-r from-amber-800 to-amber-900 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-amber-900/15 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-amber-900/20"
+          type="submit"
+        >
+          Konfirmasi pesanan <ArrowUpRight aria-hidden="true" size={17} />
+        </button>
+      </form>
+    </Modal>
   );
 }
 
@@ -372,10 +610,11 @@ function ProductModal({ availableStock, product, reviews, onClose, onAddReview }
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const { notify } = useNotification();
-  const recentReviews = (reviews[product.id] ?? []).slice(0, 3);
-  const averageRating = recentReviews.length
-    ? recentReviews.reduce((sum, review) => sum + review.rating, 0) /
-      recentReviews.length
+  const productReviews = reviews[product.id] ?? [];
+  const recentReviews = productReviews.slice(0, 3);
+  const averageRating = productReviews.length
+    ? productReviews.reduce((sum, review) => sum + review.rating, 0) /
+      productReviews.length
     : product.rating;
 
   function submitReview(event) {
@@ -457,7 +696,7 @@ function ProductModal({ availableStock, product, reviews, onClose, onAddReview }
             </h3>
           </div>
           <span className="rounded-full bg-stone-100 px-3 py-1.5 text-[10px] font-semibold text-stone-500">
-            {recentReviews.length} ulasan
+            {productReviews.length} ulasan
           </span>
         </div>
         {recentReviews.length ? (
@@ -582,10 +821,41 @@ function HistoryModal({ orders, onClose, onReset }) {
                 </div>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
                   <Check size={13} strokeWidth={2.5} />
-                  Lunas
+                  Diterima
                 </span>
               </div>
               <div className="space-y-2 px-4 py-4 sm:px-5">
+                {order.fulfillment && (
+                  <div className="mb-4 rounded-2xl border border-amber-900/10 bg-amber-50/60 p-3.5">
+                    <p className="flex items-center gap-2 text-sm font-bold text-stone-800">
+                      {order.fulfillment.method === "delivery" ? (
+                        <MapPin aria-hidden="true" size={16} />
+                      ) : (
+                        <Store aria-hidden="true" size={16} />
+                      )}
+                      {order.fulfillment.method === "delivery"
+                        ? "Delivery"
+                        : "Pickup"}
+                    </p>
+                    <p className="mt-1 text-xs text-stone-600">
+                      {order.fulfillment.customerName} · {order.fulfillment.phone}
+                    </p>
+                    {order.fulfillment.address && (
+                      <p className="mt-1 text-xs leading-5 text-stone-600">
+                        {order.fulfillment.address}
+                      </p>
+                    )}
+                    <p className="mt-1 text-xs text-stone-500">
+                      Waktu:{" "}
+                      {order.fulfillment.scheduledAt
+                        ? new Date(order.fulfillment.scheduledAt).toLocaleString(
+                            "id-ID",
+                            { dateStyle: "medium", timeStyle: "short" },
+                          )
+                        : "Secepatnya"}
+                    </p>
+                  </div>
+                )}
                 {order.items.map((item) => (
                   <div
                     className="flex items-center justify-between gap-3 text-sm"
@@ -631,7 +901,7 @@ function HistoryModal({ orders, onClose, onReset }) {
             Belum ada transaksi
           </h3>
           <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-stone-500">
-            Pesanan yang sudah dibayar akan tersimpan di sini.
+            Pesanan yang sudah dikonfirmasi akan tersimpan di sini.
           </p>
         </div>
       )}
@@ -742,7 +1012,7 @@ function AppContent() {
       date: new Date().toISOString(),
     };
     setOrders((current) => [newOrder, ...current]);
-    notify("Pembayaran berhasil! Pesananmu sedang disiapkan.");
+    notify("Pesanan berhasil dibuat! Pesananmu sedang disiapkan.");
     setHistoryOpen(true);
   }
 
@@ -793,9 +1063,10 @@ function AppContent() {
                   ? `Stok ${product.name} tersisa ${availableStock}`
                   : `Stok ${product.name} sudah habis`,
               );
-              return;
+              return false;
             }
             notify(`${quantity} ${product.name} ditambahkan ke keranjang`);
+            return true;
           }}
           onCategoryChange={setCategory}
           onCollectionChange={setCollection}

@@ -118,7 +118,7 @@ function MenuCard({
             </div>
             <button
               aria-label={`Info ${item.name}`}
-            className="grid size-11 place-items-center rounded-full border border-stone-200 text-stone-600 transition hover:border-amber-700 hover:bg-amber-50 hover:text-amber-900"
+              className="grid size-11 place-items-center rounded-full border border-stone-200 text-stone-600 transition hover:border-amber-700 hover:bg-amber-50 hover:text-amber-900"
               onClick={() => onOpenProduct(item)}
               title="Info dan komentar"
               type="button"
@@ -127,11 +127,12 @@ function MenuCard({
             </button>
             <button
               aria-label={`Tambah ${item.name} ke keranjang`}
-            className="inline-flex h-11 items-center gap-1.5 rounded-full bg-amber-800 px-3 text-xs font-bold text-white shadow-sm shadow-amber-900/10 transition hover:-translate-y-0.5 hover:bg-amber-900 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex h-11 items-center gap-1.5 rounded-full bg-amber-800 px-3 text-xs font-bold text-white shadow-sm shadow-amber-900/10 transition hover:-translate-y-0.5 hover:bg-amber-900 disabled:cursor-not-allowed disabled:opacity-40"
               disabled={selectedQuantity <= 0}
               onClick={() => {
-                onAddToCart(item, selectedQuantity);
-                setQuantity(1);
+                if (onAddToCart(item, selectedQuantity)) {
+                  setQuantity(1);
+                }
               }}
               title="Tambah ke keranjang"
               type="button"
